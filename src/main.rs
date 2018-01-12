@@ -1,17 +1,23 @@
 mod game;
+extern crate rand;
+extern crate console;
+use console::Term;
 fn main() {
-    // let mut my_game = game::Game::new();
-    let mut my_game = game::Game {
-        Board : vec![vec![4 as game::Max_num, 4 as game::Max_num, 2 as game::Max_num, 4 as game::Max_num]; 4],
-        Score : 0,
-    };
+    println!("2042 in Rust v0.0.1");
+    let mut my_game = game::Game::new();
+    let term = Term::stdout();
+    my_game.add();
+    my_game.add();
+    term.clear_last_lines(60);
     my_game.print();
-    println!("");
-    // my_game.Left();
-    my_game.Right();
-    my_game.print();
-    // let mut test:Vec<u16> = vec![0,2,2,2,2,4,4,8,2,4,8];
-    // println!("{:?}", test);
-    // game::Game::Shift(&mut test);
-    // println!("{:?}", test);
+    loop {
+        while ! my_game.inp() {
+            term.clear_last_lines(60);
+            my_game.print();
+        }
+        my_game.add();
+        term.clear_last_lines(60);
+        my_game.print();
+
+    }
 }
