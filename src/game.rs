@@ -1,15 +1,23 @@
+extern crate termion;
 use rand;
-use std::io;
 use console::Style;
+use self::termion::input::TermRead;
+use self::termion::event::Key;
+use self::termion::raw::IntoRawMode;
+use std::io::{Write, stdout, stdin};
+
 pub type MaxNum = u16;
+
 pub struct Game {
     pub board: Vec<Vec<MaxNum>>,
     pub score: u64,
 }
+
 impl Game {
     pub fn print(&self) {
-        println!("Score: {}", self.score);
+        println!("\rScore: {}", self.score);
         for row in &self.board {
+            print!("\r");
             for elem in row.iter() {
                 if *elem == 0 {
                     print!("*\t");
@@ -136,20 +144,25 @@ impl Game {
             }
         }
     }
-    pub fn inp(&mut self) -> bool {
-        let mut input = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let cmd: char = input.trim().parse().expect("What!?");
-        match cmd {
-            'a' => self.left(),
-            'd' => self.right(),
-            'w' => self.up(),
-            's' => self.down(),
-            _ => {
-                println!("Use W,A,S,D to move!");
-                return false;
-            }
+    pub fn inp(&mut self) -> (bool,u8) {
+        let stdin = stdin();
+        let mut stdout = stdout().into_raw_mode().unwrap();
+        let mut answer:bool = true;
+        let mut cnt:u8 = 0;
+        stdout.flush().unwrap();
+        for c in stdin.keys() {
+            match c.unwrap() {
+                Key::Char('q') => cnt = 1,
+                Key::Left  => answer = self.left(),
+                Key::Right  => answer = self.right(),
+                Key::Up  => answer = self.up(),
+                Key::Down  => answer = self.down(),
+                _ => cnt = 2,
+            };
+            stdout.flush().unwrap();
+            break;
         }
+        return (answer, cnt);
     }
     pub fn try(&self) -> bool {
         for mut row in &self.board {
@@ -191,6 +204,7 @@ impl Game {
         return false;
     }
 }
+
 #[cfg(test)]
 mod tests {
     use game::*;
