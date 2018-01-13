@@ -18,8 +18,11 @@ fn main() {
         my_game.add();
         term.clear_last_lines(6);
         my_game.print();
-
+        if ! my_game.try() {
+            break;
+        }
     }
+    println!("Game over!");
 }
 fn clean(term: &Term) {
     for _ in 0..20 {
