@@ -1,11 +1,10 @@
-mod game;
-extern crate console;
 extern crate rand;
 extern crate termion;
+
 use self::termion::raw::IntoRawMode;
 use std::io::{Write, stdout};
 
-// TODO исправить тип вывода функции ходов
+mod game;
 
 fn main() {
     let mut my_game = game::Game::new();
