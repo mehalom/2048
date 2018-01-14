@@ -1,9 +1,8 @@
-extern crate termion;
 use rand;
-use console::Style;
-use self::termion::input::TermRead;
-use self::termion::event::Key;
-use self::termion::raw::IntoRawMode;
+use termion::input::TermRead;
+use termion::event::Key;
+use termion::raw::IntoRawMode;
+use termion::color;
 use std::io::{Write, stdout, stdin};
 
 pub type MaxNum = u16;
@@ -22,16 +21,20 @@ impl Game {
                 if *elem == 0 {
                     print!("*\t");
                 } else {
-                    let mut style = match *elem % 128 {
-                        2 => Style::new().white(),
-                        4 => Style::new().red(),
-                        8 => Style::new().green(),
-                        16 => Style::new().yellow(),
-                        32 => Style::new().blue(),
-                        64 => Style::new().magenta(),
-                        _ => Style::new().cyan(),
+                    match *elem {
+                        2 => print!("{}{}\t{}", color::Fg(color::White), elem, color::Fg(color::Reset)),
+                        4 => print!("{}{}\t{}", color::Fg(color::Red), elem, color::Fg(color::Reset)),
+                        8 => print!("{}{}\t{}", color::Fg(color::Green), elem, color::Fg(color::Reset)),
+                        16 => print!("{}{}\t{}", color::Fg(color::Yellow), elem, color::Fg(color::Reset)),
+                        32 => print!("{}{}\t{}", color::Fg(color::Blue), elem, color::Fg(color::Reset)),
+                        64 => print!("{}{}\t{}", color::Fg(color::Magenta), elem, color::Fg(color::Reset)),
+                        128 => print!("{}{}\t{}", color::Fg(color::Cyan), elem, color::Fg(color::Reset)),
+                        256 => print!("{}{}\t{}", color::Fg(color::LightRed), elem, color::Fg(color::Reset)),
+                        512 => print!("{}{}\t{}", color::Fg(color::LightGreen), elem, color::Fg(color::Reset)),
+                        1024 => print!("{}{}\t{}", color::Fg(color::LightYellow), elem, color::Fg(color::Reset)),
+                        _ => print!("{}{}\t{}", color::Fg(color::LightMagenta), elem, color::Fg(color::Reset)),
                     };
-                    print!("{}\t", style.apply_to(elem));
+
                 }
             }
             println!("");
@@ -152,11 +155,11 @@ impl Game {
         stdout.flush().unwrap();
         for c in stdin.keys() {
             match c.unwrap() {
-                Key::Char('q') => cnt = 1,
-                Key::Left  => answer = self.left(),
-                Key::Right  => answer = self.right(),
-                Key::Up  => answer = self.up(),
-                Key::Down  => answer = self.down(),
+                Key::Char('q') | Key::Ctrl('c') => cnt = 1,
+                Key::Left | Key::Char('a') => answer = self.left(),
+                Key::Right | Key::Char('d') => answer = self.right(),
+                Key::Up | Key::Char('w') => answer = self.up(),
+                Key::Down | Key::Char('s') => answer = self.down(),
                 _ => cnt = 2,
             };
             stdout.flush().unwrap();
@@ -385,5 +388,18 @@ mod tests {
         assert_eq!(test_true5.try(), true);
         assert_eq!(test_true6.try(), true);
         assert_eq!(test_false1.try(), false);
+    }
+    #[test]
+    fn print() {
+        let test = Game {
+            board: vec![
+                vec![0 as MaxNum, 2 as MaxNum, 4 as MaxNum, 8 as MaxNum],
+                vec![16 as MaxNum, 32 as MaxNum, 64 as MaxNum, 128 as MaxNum],
+                vec![256 as MaxNum, 512 as MaxNum, 1024 as MaxNum, 2048 as MaxNum],
+                vec![4096 as MaxNum, 8192 as MaxNum, 2 as MaxNum, 0 as MaxNum],
+            ],
+            score: 0,
+        };
+        test.print();
     }
 }
