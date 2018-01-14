@@ -1,5 +1,4 @@
 mod game;
-extern crate console;
 extern crate rand;
 extern crate termion;
 use self::termion::raw::IntoRawMode;
