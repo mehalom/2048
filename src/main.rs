@@ -13,7 +13,7 @@ fn main() {
     write!(stdout, "{}{}{}",termion::clear::All, termion::cursor::Hide, termion::cursor::Goto(1, 1)).unwrap();
     my_game.add();
     my_game.add();
-    println!("2048 in Rust v0.0.1");
+    println!("2048 in Rust v0.0.1-alpha");
     my_game.print();
     let mut result: (bool, u8) = (true, 0);
     while result.1 == 0 {
