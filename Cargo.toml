@@ -1,6 +1,6 @@
 [package]
 name = "game_of_2048"
-version = "0.1.0"
+version = "0.0.1-alpha"
 authors = ["Eugene Lomov <eugene.v.lomov@gmail.com>"]
 
 [dependencies]
