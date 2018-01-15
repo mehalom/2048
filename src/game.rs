@@ -1,9 +1,29 @@
+/*
+    2048 is a small Rust implementation of famous game by Gabriele Cirulli
+    (See <https://github.com/gabrielecirulli/2048> for more details)
+
+    Copyright (C) 2018  Eugene Lomov <eugene.v.lomov@gmail.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 use rand;
 use termion::input::TermRead;
 use termion::event::Key;
 use termion::raw::IntoRawMode;
 use termion::color;
-use std::io::{Write, stdout, stdin};
+use std::io::{stdin, stdout, Write};
 
 type MaxNum = u16;
 
@@ -29,19 +49,73 @@ impl Game {
                     print!("*\t");
                 } else {
                     match *elem {
-                        2 => print!("{}{}\t{}", color::Fg(color::White), elem, color::Fg(color::Reset)),
-                        4 => print!("{}{}\t{}", color::Fg(color::Red), elem, color::Fg(color::Reset)),
-                        8 => print!("{}{}\t{}", color::Fg(color::Green), elem, color::Fg(color::Reset)),
-                        16 => print!("{}{}\t{}", color::Fg(color::Yellow), elem, color::Fg(color::Reset)),
-                        32 => print!("{}{}\t{}", color::Fg(color::Blue), elem, color::Fg(color::Reset)),
-                        64 => print!("{}{}\t{}", color::Fg(color::Magenta), elem, color::Fg(color::Reset)),
-                        128 => print!("{}{}\t{}", color::Fg(color::Cyan), elem, color::Fg(color::Reset)),
-                        256 => print!("{}{}\t{}", color::Fg(color::LightRed), elem, color::Fg(color::Reset)),
-                        512 => print!("{}{}\t{}", color::Fg(color::LightGreen), elem, color::Fg(color::Reset)),
-                        1024 => print!("{}{}\t{}", color::Fg(color::LightYellow), elem, color::Fg(color::Reset)),
-                        _ => print!("{}{}\t{}", color::Fg(color::LightMagenta), elem, color::Fg(color::Reset)),
+                        2 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::White),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        4 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Red),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        8 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Green),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        16 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Yellow),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        32 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Blue),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        64 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Magenta),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        128 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Cyan),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        256 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightRed),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        512 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightGreen),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        1024 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightYellow),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        _ => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightMagenta),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
                     };
-
                 }
             }
             println!("");
@@ -162,10 +236,26 @@ impl Game {
         for c in stdin.keys() {
             answer = match c.unwrap() {
                 Key::Char('q') | Key::Ctrl('c') => Status::Exit,
-                Key::Left | Key::Char('a') => if self.left() {Status::Continue} else {Status::Impossible},
-                Key::Right | Key::Char('d') => if self.right() {Status::Continue} else {Status::Impossible},
-                Key::Up | Key::Char('w') => if self.up() {Status::Continue} else {Status::Impossible},
-                Key::Down | Key::Char('s') => if self.down() {Status::Continue} else {Status::Impossible},
+                Key::Left | Key::Char('a') => if self.left() {
+                    Status::Continue
+                } else {
+                    Status::Impossible
+                },
+                Key::Right | Key::Char('d') => if self.right() {
+                    Status::Continue
+                } else {
+                    Status::Impossible
+                },
+                Key::Up | Key::Char('w') => if self.up() {
+                    Status::Continue
+                } else {
+                    Status::Impossible
+                },
+                Key::Down | Key::Char('s') => if self.down() {
+                    Status::Continue
+                } else {
+                    Status::Impossible
+                },
                 Key::Char('h') => Status::Help,
                 _ => Status::Impossible,
             };
