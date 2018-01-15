@@ -5,11 +5,18 @@ use termion::raw::IntoRawMode;
 use termion::color;
 use std::io::{Write, stdout, stdin};
 
-pub type MaxNum = u16;
+type MaxNum = u16;
 
 pub struct Game {
     pub board: Vec<Vec<MaxNum>>,
     pub score: u64,
+}
+
+pub enum Status {
+    Continue,
+    Help,
+    Exit,
+    Impossible,
 }
 
 impl Game {
@@ -147,25 +154,25 @@ impl Game {
             }
         }
     }
-    pub fn inp(&mut self) -> (bool,u8) {
+    pub fn inp(&mut self) -> Status {
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode().unwrap();
-        let mut answer:bool = true;
-        let mut cnt:u8 = 0;
         stdout.flush().unwrap();
+        let mut answer: Status = Status::Impossible;
         for c in stdin.keys() {
-            match c.unwrap() {
-                Key::Char('q') | Key::Ctrl('c') => cnt = 1,
-                Key::Left | Key::Char('a') => answer = self.left(),
-                Key::Right | Key::Char('d') => answer = self.right(),
-                Key::Up | Key::Char('w') => answer = self.up(),
-                Key::Down | Key::Char('s') => answer = self.down(),
-                _ => cnt = 2,
+            answer = match c.unwrap() {
+                Key::Char('q') | Key::Ctrl('c') => Status::Exit,
+                Key::Left | Key::Char('a') => if self.left() {Status::Continue} else {Status::Impossible},
+                Key::Right | Key::Char('d') => if self.right() {Status::Continue} else {Status::Impossible},
+                Key::Up | Key::Char('w') => if self.up() {Status::Continue} else {Status::Impossible},
+                Key::Down | Key::Char('s') => if self.down() {Status::Continue} else {Status::Impossible},
+                Key::Char('h') => Status::Help,
+                _ => Status::Impossible,
             };
             stdout.flush().unwrap();
             break;
         }
-        return (answer, cnt);
+        return answer;
     }
     pub fn try(&self) -> bool {
         for mut row in &self.board {
