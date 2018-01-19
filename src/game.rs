@@ -28,8 +28,9 @@ use std::io::{stdin, stdout, Write};
 type MaxNum = u16;
 
 pub struct Game {
-    pub board: Vec<Vec<MaxNum>>,
-    pub score: u64,
+    board: Vec<Vec<MaxNum>>,
+    score: u64,
+    pub moves: u64,
 }
 
 pub enum Status {
@@ -125,6 +126,7 @@ impl Game {
         Game {
             board: vec![vec![0 as MaxNum; 4]; 4],
             score: 0,
+            moves: 0,
         }
     }
     fn up(&mut self) -> bool {
@@ -209,8 +211,6 @@ impl Game {
                 change = true;
             }
         }
-        // println!("{:?}", row);
-        // println!("");
         return (score, change);
     }
     pub fn add(&mut self) {
@@ -237,21 +237,25 @@ impl Game {
             answer = match c.unwrap() {
                 Key::Char('q') | Key::Ctrl('c') => Status::Exit,
                 Key::Left | Key::Char('a') => if self.left() {
+                    self.moves += 1;
                     Status::Continue
                 } else {
                     Status::Impossible
                 },
                 Key::Right | Key::Char('d') => if self.right() {
+                    self.moves += 1;
                     Status::Continue
                 } else {
                     Status::Impossible
                 },
                 Key::Up | Key::Char('w') => if self.up() {
+                    self.moves += 1;
                     Status::Continue
                 } else {
                     Status::Impossible
                 },
                 Key::Down | Key::Char('s') => if self.down() {
+                    self.moves += 1;
                     Status::Continue
                 } else {
                     Status::Impossible
@@ -326,6 +330,7 @@ mod tests {
                 vec![4 as MaxNum, 4 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
         };
         let answer = Game {
             board: vec![
@@ -335,6 +340,7 @@ mod tests {
                 vec![0 as MaxNum, 0 as MaxNum, 0 as MaxNum, 0 as MaxNum],
             ],
             score: 32,
+            moves: 0,
         };
         assert_eq!(my_game.up(), true);
         assert_eq!(my_game.board, answer.board);
@@ -351,6 +357,7 @@ mod tests {
                 vec![4 as MaxNum, 4 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
         };
         let answer = Game {
             board: vec![
@@ -360,6 +367,7 @@ mod tests {
                 vec![8 as MaxNum, 2 as MaxNum, 0 as MaxNum, 0 as MaxNum],
             ],
             score: 32,
+            moves: 0,
         };
         my_game.left();
         assert_eq!(my_game.board, answer.board);
@@ -375,6 +383,7 @@ mod tests {
                 vec![4 as MaxNum, 4 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
         };
         let answer = Game {
             board: vec![
@@ -384,6 +393,7 @@ mod tests {
                 vec![0 as MaxNum, 0 as MaxNum, 8 as MaxNum, 2 as MaxNum],
             ],
             score: 32,
+            moves: 0,
         };
         my_game.right();
         assert_eq!(my_game.board, answer.board);
@@ -399,6 +409,7 @@ mod tests {
                 vec![4 as MaxNum, 4 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
         };
         let answer = Game {
             board: vec![
@@ -408,6 +419,7 @@ mod tests {
                 vec![8 as MaxNum, 4 as MaxNum, 2 as MaxNum, 8 as MaxNum],
             ],
             score: 32,
+            moves: 0,
         };
         my_game.down();
         assert_eq!(my_game.board, answer.board);
@@ -423,6 +435,7 @@ mod tests {
                 vec![4 as MaxNum, 4 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
         };
         let test_true2 = Game {
             board: vec![
@@ -432,6 +445,7 @@ mod tests {
                 vec![0 as MaxNum, 0 as MaxNum, 0 as MaxNum, 0 as MaxNum],
             ],
             score: 32,
+            moves: 0,
         };
         let test_true3 = Game {
             board: vec![
@@ -441,6 +455,7 @@ mod tests {
                 vec![0 as MaxNum, 0 as MaxNum, 0 as MaxNum, 0 as MaxNum],
             ],
             score: 32,
+            moves: 0,
         };
         let test_true4 = Game {
             board: vec![
@@ -450,6 +465,7 @@ mod tests {
                 vec![0 as MaxNum, 0 as MaxNum, 8 as MaxNum, 16 as MaxNum],
             ],
             score: 32,
+            moves: 0,
         };
         let test_true5 = Game {
             board: vec![
@@ -459,6 +475,7 @@ mod tests {
                 vec![128 as MaxNum, 2 as MaxNum, 4 as MaxNum, 4 as MaxNum],
             ],
             score: 32,
+            moves: 0,
         };
         let test_true6 = Game {
             board: vec![
@@ -468,6 +485,7 @@ mod tests {
                 vec![16 as MaxNum, 32 as MaxNum, 4 as MaxNum, 16 as MaxNum],
             ],
             score: 32,
+            moves: 0,
         };
         let test_false1 = Game {
             board: vec![
@@ -477,6 +495,7 @@ mod tests {
                 vec![2 as MaxNum, 4 as MaxNum, 16 as MaxNum, 32 as MaxNum],
             ],
             score: 32,
+            moves: 0,
         };
         assert_eq!(test_true1.try(), true);
         assert_eq!(test_true2.try(), true);
@@ -496,6 +515,7 @@ mod tests {
                 vec![4096 as MaxNum, 8192 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
         };
         test.print();
     }

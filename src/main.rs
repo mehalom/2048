@@ -48,7 +48,7 @@ fn main() {
                 clean_last(7);
                 my_game.print();
                 if !my_game.try() {
-                    println!("\rGame over!");
+                    println!("\rGame over!\n\rYou made {} moves.", my_game.moves);
                     break;
                 }
             }
