@@ -24,6 +24,8 @@ use termion::event::Key;
 use termion::raw::IntoRawMode;
 use termion::color;
 use std::io::{stdin, stdout, Write};
+use std::fs::{File, OpenOptions};
+use std::io::prelude::*;
 
 type MaxNum = u16;
 
@@ -31,6 +33,9 @@ pub struct Game {
     board: Vec<Vec<MaxNum>>,
     score: u64,
     pub moves: u64,
+    best_score: u64,
+    best_moves: u64,
+    max_num: MaxNum,
 }
 
 pub enum Status {
@@ -42,7 +47,7 @@ pub enum Status {
 
 impl Game {
     pub fn print(&self) {
-        println!("\rScore: {}", self.score);
+        println!("\rScore: {}\t Best: {}", self.score, self.best_score);
         for row in &self.board {
             print!("\r");
             for elem in row.iter() {
@@ -127,7 +132,81 @@ impl Game {
             board: vec![vec![0 as MaxNum; 4]; 4],
             score: 0,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         }
+    }
+    pub fn best_read(&mut self) {
+        match File::open("stats.conf") {
+            Ok(file) => {
+                let mut f = file;
+                let mut string = String::new();
+                f.read_to_string(&mut string).unwrap();
+                let values: Vec<&str> = string.split(" ").collect();
+                self.best_score = values[0].trim().parse::<u64>().expect("failed to parse");
+                self.best_moves = values[1].trim().parse::<u64>().expect("failed to parse");
+                self.max_num = values[2].trim().parse::<MaxNum>().expect("failed to parse");
+            }
+            Err(_) => {
+                let mut buf = File::create("stats.conf").unwrap();
+                write!(buf, "{} {} {}", 0, 0, 0);
+            }
+        };
+    }
+    fn best_write(&self) {
+        let mut file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .append(false)
+            .open("stats.conf")
+            .unwrap();
+        write!(
+            file,
+            "{} {} {}",
+            self.best_score, self.best_moves, self.max_num
+        );
+    }
+    pub fn if_best(&mut self) {
+        let mut score = false;
+        let mut moves = false;
+        let mut max = false;
+        if self.score > self.best_score {
+            self.best_score = self.score;
+            score = true;
+        }
+        if self.moves > self.best_moves {
+            self.best_moves = self.moves;
+            moves = true;
+        }
+        for row in &self.board {
+            for elem in row {
+                if *elem > self.max_num {
+                    self.max_num = *elem;
+                    max = true;
+                }
+            }
+        }
+        if score | moves | max {
+            print!("\rNew records: ");
+            if score {
+                print!("Score: {} ", self.best_score);
+            }
+            if moves {
+                print!("Moves: {} ", self.best_moves);
+            }
+            if max {
+                print!("Max tile: {}", self.max_num);
+            }
+            println!("");
+            self.best_write();
+        }
+    }
+    fn print_best(&self) {
+        println!(
+            "\rStats: Score: {}, Moves: {}, Max tile: {}",
+            self.best_score, self.best_moves, self.max_num
+        );
     }
     fn up(&mut self) -> bool {
         let mut change: bool = false;
@@ -261,6 +340,10 @@ impl Game {
                     Status::Impossible
                 },
                 Key::Char('h') => Status::Help,
+                Key::Char('b') => {
+                    self.print_best();
+                    Status::Impossible
+                }
                 _ => Status::Impossible,
             };
             stdout.flush().unwrap();
@@ -331,6 +414,9 @@ mod tests {
             ],
             score: 0,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let answer = Game {
             board: vec![
@@ -341,6 +427,9 @@ mod tests {
             ],
             score: 32,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         assert_eq!(my_game.up(), true);
         assert_eq!(my_game.board, answer.board);
@@ -358,6 +447,9 @@ mod tests {
             ],
             score: 0,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let answer = Game {
             board: vec![
@@ -368,6 +460,9 @@ mod tests {
             ],
             score: 32,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         my_game.left();
         assert_eq!(my_game.board, answer.board);
@@ -384,6 +479,9 @@ mod tests {
             ],
             score: 0,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let answer = Game {
             board: vec![
@@ -394,6 +492,9 @@ mod tests {
             ],
             score: 32,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         my_game.right();
         assert_eq!(my_game.board, answer.board);
@@ -410,6 +511,9 @@ mod tests {
             ],
             score: 0,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let answer = Game {
             board: vec![
@@ -420,6 +524,9 @@ mod tests {
             ],
             score: 32,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         my_game.down();
         assert_eq!(my_game.board, answer.board);
@@ -436,6 +543,9 @@ mod tests {
             ],
             score: 0,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_true2 = Game {
             board: vec![
@@ -446,6 +556,9 @@ mod tests {
             ],
             score: 32,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_true3 = Game {
             board: vec![
@@ -456,6 +569,9 @@ mod tests {
             ],
             score: 32,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_true4 = Game {
             board: vec![
@@ -466,6 +582,9 @@ mod tests {
             ],
             score: 32,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_true5 = Game {
             board: vec![
@@ -476,6 +595,9 @@ mod tests {
             ],
             score: 32,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_true6 = Game {
             board: vec![
@@ -486,6 +608,9 @@ mod tests {
             ],
             score: 32,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_false1 = Game {
             board: vec![
@@ -496,6 +621,9 @@ mod tests {
             ],
             score: 32,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         assert_eq!(test_true1.try(), true);
         assert_eq!(test_true2.try(), true);
@@ -516,6 +644,9 @@ mod tests {
             ],
             score: 0,
             moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         test.print();
     }

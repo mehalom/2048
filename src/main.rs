@@ -37,6 +37,7 @@ fn main() {
         termion::cursor::Hide,
         termion::cursor::Goto(1, 1)
     ).unwrap();
+    my_game.best_read();
     my_game.add();
     my_game.add();
     println!("2048 in Rust v0.0.1-alpha");
@@ -45,14 +46,15 @@ fn main() {
         match my_game.inp() {
             Status::Continue => {
                 my_game.add();
-                clean_last(7);
+                clean_last(9);
                 my_game.print();
                 if !my_game.try() {
                     println!("\rGame over!\n\rYou made {} moves.", my_game.moves);
+                    my_game.if_best();
                     break;
                 }
             }
-            Status::Help => println!("\rUse arrows or WASD to move and q or CTRL + C to exit"),
+            Status::Help => println!("\rUse arrows or WASD to move\n\rq or CTRL + C to exit\n\rb to show stats"),
             Status::Exit => break,
             Status::Impossible => continue,
         }
