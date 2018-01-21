@@ -1,20 +1,53 @@
+/*
+    2048 is a small Rust implementation of famous game by Gabriele Cirulli
+    (See <https://github.com/gabrielecirulli/2048> for more details)
+
+    Copyright (C) 2018  Eugene Lomov <eugene.v.lomov@gmail.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 use rand;
 use termion::input::TermRead;
 use termion::event::Key;
 use termion::raw::IntoRawMode;
 use termion::color;
-use std::io::{Write, stdout, stdin};
+use std::io::{stdin, stdout, Write};
+use std::fs::{File, OpenOptions};
+use std::io::prelude::*;
 
-pub type MaxNum = u16;
+type MaxNum = u16;
 
 pub struct Game {
-    pub board: Vec<Vec<MaxNum>>,
-    pub score: u64,
+    board: Vec<Vec<MaxNum>>,
+    score: u64,
+    pub moves: u64,
+    best_score: u64,
+    best_moves: u64,
+    max_num: MaxNum,
+}
+
+pub enum Status {
+    Continue,
+    Help,
+    Exit,
+    Impossible,
 }
 
 impl Game {
     pub fn print(&self) {
-        println!("\rScore: {}", self.score);
+        println!("\rScore: {}\t Best: {}", self.score, self.best_score);
         for row in &self.board {
             print!("\r");
             for elem in row.iter() {
@@ -22,19 +55,85 @@ impl Game {
                     print!("*\t");
                 } else {
                     match *elem {
-                        2 => print!("{}{}\t{}", color::Fg(color::White), elem, color::Fg(color::Reset)),
-                        4 => print!("{}{}\t{}", color::Fg(color::Red), elem, color::Fg(color::Reset)),
-                        8 => print!("{}{}\t{}", color::Fg(color::Green), elem, color::Fg(color::Reset)),
-                        16 => print!("{}{}\t{}", color::Fg(color::Yellow), elem, color::Fg(color::Reset)),
-                        32 => print!("{}{}\t{}", color::Fg(color::Blue), elem, color::Fg(color::Reset)),
-                        64 => print!("{}{}\t{}", color::Fg(color::Magenta), elem, color::Fg(color::Reset)),
-                        128 => print!("{}{}\t{}", color::Fg(color::Cyan), elem, color::Fg(color::Reset)),
-                        256 => print!("{}{}\t{}", color::Fg(color::LightRed), elem, color::Fg(color::Reset)),
-                        512 => print!("{}{}\t{}", color::Fg(color::LightGreen), elem, color::Fg(color::Reset)),
-                        1024 => print!("{}{}\t{}", color::Fg(color::LightYellow), elem, color::Fg(color::Reset)),
-                        _ => print!("{}{}\t{}", color::Fg(color::LightMagenta), elem, color::Fg(color::Reset)),
+                        2 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::White),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        4 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Red),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        8 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Green),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        16 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Yellow),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        32 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Blue),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        64 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Magenta),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        128 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::Cyan),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        256 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightRed),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        512 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightGreen),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        1024 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightYellow),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        2048 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightBlue),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        4096 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightMagenta),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        _ => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightCyan),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
                     };
-
                 }
             }
             println!("");
@@ -44,7 +143,82 @@ impl Game {
         Game {
             board: vec![vec![0 as MaxNum; 4]; 4],
             score: 0,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         }
+    }
+    pub fn best_read(&mut self) {
+        match File::open("stats.conf") {
+            Ok(file) => {
+                let mut f = file;
+                let mut string = String::new();
+                f.read_to_string(&mut string).unwrap();
+                let values: Vec<&str> = string.split(" ").collect();
+                self.best_score = values[0].trim().parse::<u64>().expect("failed to parse");
+                self.best_moves = values[1].trim().parse::<u64>().expect("failed to parse");
+                self.max_num = values[2].trim().parse::<MaxNum>().expect("failed to parse");
+            }
+            Err(_) => {
+                let mut buf = File::create("stats.conf").unwrap();
+                write!(buf, "{} {} {}", 0, 0, 0);
+            }
+        };
+    }
+    fn best_write(&self) {
+        let mut file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .append(false)
+            .open("stats.conf")
+            .unwrap();
+        write!(
+            file,
+            "{} {} {}",
+            self.best_score, self.best_moves, self.max_num
+        );
+    }
+    pub fn if_best(&mut self) {
+        let mut score = false;
+        let mut moves = false;
+        let mut max = false;
+        if self.score > self.best_score {
+            self.best_score = self.score;
+            score = true;
+        }
+        if self.moves > self.best_moves {
+            self.best_moves = self.moves;
+            moves = true;
+        }
+        for row in &self.board {
+            for elem in row {
+                if *elem > self.max_num {
+                    self.max_num = *elem;
+                    max = true;
+                }
+            }
+        }
+        if score | moves | max {
+            print!("\rNew records: ");
+            if score {
+                print!("Score: {} ", self.best_score);
+            }
+            if moves {
+                print!("Moves: {} ", self.best_moves);
+            }
+            if max {
+                print!("Max tile: {}", self.max_num);
+            }
+            println!("");
+            self.best_write();
+        }
+    }
+    fn print_best(&self) {
+        println!(
+            "\rStats: Score: {}, Moves: {}, Max tile: {}",
+            self.best_score, self.best_moves, self.max_num
+        );
     }
     fn up(&mut self) -> bool {
         let mut change: bool = false;
@@ -128,8 +302,6 @@ impl Game {
                 change = true;
             }
         }
-        // println!("{:?}", row);
-        // println!("");
         return (score, change);
     }
     pub fn add(&mut self) {
@@ -147,25 +319,49 @@ impl Game {
             }
         }
     }
-    pub fn inp(&mut self) -> (bool,u8) {
+    pub fn inp(&mut self) -> Status {
         let stdin = stdin();
         let mut stdout = stdout().into_raw_mode().unwrap();
-        let mut answer:bool = true;
-        let mut cnt:u8 = 0;
         stdout.flush().unwrap();
+        let mut answer: Status = Status::Impossible;
         for c in stdin.keys() {
-            match c.unwrap() {
-                Key::Char('q') | Key::Ctrl('c') => cnt = 1,
-                Key::Left | Key::Char('a') => answer = self.left(),
-                Key::Right | Key::Char('d') => answer = self.right(),
-                Key::Up | Key::Char('w') => answer = self.up(),
-                Key::Down | Key::Char('s') => answer = self.down(),
-                _ => cnt = 2,
+            answer = match c.unwrap() {
+                Key::Char('q') | Key::Ctrl('c') => Status::Exit,
+                Key::Left | Key::Char('a') => if self.left() {
+                    self.moves += 1;
+                    Status::Continue
+                } else {
+                    Status::Impossible
+                },
+                Key::Right | Key::Char('d') => if self.right() {
+                    self.moves += 1;
+                    Status::Continue
+                } else {
+                    Status::Impossible
+                },
+                Key::Up | Key::Char('w') => if self.up() {
+                    self.moves += 1;
+                    Status::Continue
+                } else {
+                    Status::Impossible
+                },
+                Key::Down | Key::Char('s') => if self.down() {
+                    self.moves += 1;
+                    Status::Continue
+                } else {
+                    Status::Impossible
+                },
+                Key::Char('h') => Status::Help,
+                Key::Char('b') => {
+                    self.print_best();
+                    Status::Impossible
+                }
+                _ => Status::Impossible,
             };
             stdout.flush().unwrap();
             break;
         }
-        return (answer, cnt);
+        return answer;
     }
     pub fn try(&self) -> bool {
         for mut row in &self.board {
@@ -229,6 +425,10 @@ mod tests {
                 vec![4 as MaxNum, 4 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let answer = Game {
             board: vec![
@@ -238,6 +438,10 @@ mod tests {
                 vec![0 as MaxNum, 0 as MaxNum, 0 as MaxNum, 0 as MaxNum],
             ],
             score: 32,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         assert_eq!(my_game.up(), true);
         assert_eq!(my_game.board, answer.board);
@@ -254,6 +458,10 @@ mod tests {
                 vec![4 as MaxNum, 4 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let answer = Game {
             board: vec![
@@ -263,6 +471,10 @@ mod tests {
                 vec![8 as MaxNum, 2 as MaxNum, 0 as MaxNum, 0 as MaxNum],
             ],
             score: 32,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         my_game.left();
         assert_eq!(my_game.board, answer.board);
@@ -278,6 +490,10 @@ mod tests {
                 vec![4 as MaxNum, 4 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let answer = Game {
             board: vec![
@@ -287,6 +503,10 @@ mod tests {
                 vec![0 as MaxNum, 0 as MaxNum, 8 as MaxNum, 2 as MaxNum],
             ],
             score: 32,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         my_game.right();
         assert_eq!(my_game.board, answer.board);
@@ -302,6 +522,10 @@ mod tests {
                 vec![4 as MaxNum, 4 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let answer = Game {
             board: vec![
@@ -311,6 +535,10 @@ mod tests {
                 vec![8 as MaxNum, 4 as MaxNum, 2 as MaxNum, 8 as MaxNum],
             ],
             score: 32,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         my_game.down();
         assert_eq!(my_game.board, answer.board);
@@ -326,6 +554,10 @@ mod tests {
                 vec![4 as MaxNum, 4 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_true2 = Game {
             board: vec![
@@ -335,6 +567,10 @@ mod tests {
                 vec![0 as MaxNum, 0 as MaxNum, 0 as MaxNum, 0 as MaxNum],
             ],
             score: 32,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_true3 = Game {
             board: vec![
@@ -344,6 +580,10 @@ mod tests {
                 vec![0 as MaxNum, 0 as MaxNum, 0 as MaxNum, 0 as MaxNum],
             ],
             score: 32,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_true4 = Game {
             board: vec![
@@ -353,6 +593,10 @@ mod tests {
                 vec![0 as MaxNum, 0 as MaxNum, 8 as MaxNum, 16 as MaxNum],
             ],
             score: 32,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_true5 = Game {
             board: vec![
@@ -362,6 +606,10 @@ mod tests {
                 vec![128 as MaxNum, 2 as MaxNum, 4 as MaxNum, 4 as MaxNum],
             ],
             score: 32,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_true6 = Game {
             board: vec![
@@ -371,6 +619,10 @@ mod tests {
                 vec![16 as MaxNum, 32 as MaxNum, 4 as MaxNum, 16 as MaxNum],
             ],
             score: 32,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         let test_false1 = Game {
             board: vec![
@@ -380,6 +632,10 @@ mod tests {
                 vec![2 as MaxNum, 4 as MaxNum, 16 as MaxNum, 32 as MaxNum],
             ],
             score: 32,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         assert_eq!(test_true1.try(), true);
         assert_eq!(test_true2.try(), true);
@@ -399,6 +655,10 @@ mod tests {
                 vec![4096 as MaxNum, 8192 as MaxNum, 2 as MaxNum, 0 as MaxNum],
             ],
             score: 0,
+            moves: 0,
+            best_score: 0,
+            best_moves: 0,
+            max_num: 0,
         };
         test.print();
     }
