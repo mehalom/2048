@@ -54,7 +54,9 @@ fn main() {
                     break;
                 }
             }
-            Status::Help => println!("\rUse arrows or WASD to move\n\rq or CTRL + C to exit\n\rb to show stats"),
+            Status::Help => {
+                println!("\rUse arrows or WASD to move\n\rq or CTRL + C to exit\n\rb to show stats")
+            }
             Status::Exit => break,
             Status::Impossible => continue,
         }

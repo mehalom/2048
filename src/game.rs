@@ -115,9 +115,21 @@ impl Game {
                             elem,
                             color::Fg(color::Reset)
                         ),
-                        _ => print!(
+                        2048 => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightBlue),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        4096 => print!(
                             "{}{}\t{}",
                             color::Fg(color::LightMagenta),
+                            elem,
+                            color::Fg(color::Reset)
+                        ),
+                        _ => print!(
+                            "{}{}\t{}",
+                            color::Fg(color::LightCyan),
                             elem,
                             color::Fg(color::Reset)
                         ),
