@@ -40,13 +40,13 @@ fn main() {
     my_game.best_read();
     my_game.add();
     my_game.add();
-    println!("2048 in Rust v0.0.1-alpha");
+    println!("2048 in Rust v0.1.0");
     my_game.print();
     loop {
         match my_game.inp() {
             Status::Continue => {
                 my_game.add();
-                clean_last(9);
+                clean_last(10);
                 my_game.print();
                 if !my_game.try() {
                     println!("\rGame over!\n\rYou made {} moves.", my_game.moves);
