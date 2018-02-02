@@ -171,7 +171,7 @@ impl Game {
             }
             Err(_) => {
                 let mut buf = File::create("stats.conf").unwrap();
-                write!(buf, "{} {} {} {} {} {}", 0, 0, 0, 0, 0, 0);
+                write!(buf, "{} {} {} {} {} {}", 0, 0, 0, 0, 0, 0).unwrap();
             }
         };
     }
@@ -191,7 +191,7 @@ impl Game {
             self.total_games,
             self.total_score,
             self.total_moves
-        );
+        ).unwrap();
     }
     pub fn if_best(&mut self) {
         let mut score = false;

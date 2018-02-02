@@ -1,7 +1,7 @@
 [package]
-name = "game_of_2048"
+name = "2048"
 description = "A small Rust implementation of 2048"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Eugene Lomov <eugene.v.lomov@gmail.com>"]
 repository = "https://github.com/mehalom/2048.git"
 license = "GPL-3.0-or-later"
