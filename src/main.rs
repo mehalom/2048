@@ -40,7 +40,7 @@ fn main() {
     my_game.best_read();
     my_game.add();
     my_game.add();
-    println!("2048 in Rust v0.1.0");
+    println!("2048 in Rust v0.2.0");
     my_game.print();
     loop {
         match my_game.inp() {
