@@ -271,7 +271,7 @@ impl Game {
     }
     fn left(&mut self) -> bool {
         let mut change: bool = false;
-        for mut row in &mut self.board {
+        for row in &mut self.board {
             let ans = Game::shift(row);
             self.score += ans.0;
             change = change | ans.1;
@@ -280,7 +280,7 @@ impl Game {
     }
     fn right(&mut self) -> bool {
         let mut change: bool = false;
-        for mut row in &mut self.board {
+        for row in &mut self.board {
             let mut temp: Vec<MaxNum> = Vec::new();
             for elem in row.iter() {
                 temp.insert(0, *elem);
@@ -324,7 +324,7 @@ impl Game {
     pub fn add(&mut self) {
         let mut counter = rand::random::<u8>();
         loop {
-            for mut row in &mut self.board {
+            for row in &mut self.board {
                 for elem in &mut row.iter_mut() {
                     if (*elem == 0) & (counter == 0) {
                         *elem = 2;
@@ -381,7 +381,7 @@ impl Game {
         return answer;
     }
     pub fn try(&self) -> bool {
-        for mut row in &self.board {
+        for row in &self.board {
             let mut temp: Vec<MaxNum> = Vec::new();
             for elem in row.iter() {
                 temp.insert(0, *elem);
@@ -390,7 +390,7 @@ impl Game {
                 return true;
             }
         }
-        for mut row in &self.board {
+        for row in &self.board {
             let mut temp: Vec<MaxNum> = Vec::new();
             for elem in row.iter() {
                 temp.push(*elem);
